@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passkey Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@simple-web-crypto/pbkdf2@2.1.1/dist/crypto.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webauthn-json/4.0.0/webauthn-json.umd.min.js"></script>
+</head>
+<body>
+    <h1>Passkey Authentication Login</h1>
+    <form id="login-form">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required />
+        <button type="button" id="login-button">Login with Passkey</button>
+    </form>
+    <script>
+        document.getElementById('login-button').onclick = async function() {
+            const username = document.getElementById('username').value;
+            // Perform WebAuthn login logic here
+            // Ideally, you would call your backend to get the required options for login
+            const response = await navigator.credentials.get({
+                publicKey: {
+                    // Your publicKeyOptions go here
+                    challenge: new Uint8Array(32), // Replace with actual challenge
+                    allowCredentials: [
+                        {
+                            id: new Uint8Array(16), // Replace with actual ID
+                            type: 'public-key'
+                        }
+                    ],
+                    // Other necessary options
+                }
+            });
+            // Handle the response
+            console.log(response);
+        };
+    </script>
+</body>
+</html>
