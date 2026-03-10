@@ -1,9 +1,604 @@
-<html>
+
+
+<!DOCTYPE html>
+<html lang="ja">
 <head>
-    <title>Passkey Demo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Passkey Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface-raised: #1a1a26;
+    --border: #2a2a3a;
+    --border-focus: #5b6ef5;
+    --text: #e8e8f0;
+    --text-muted: #8888a0;
+    --accent: #5b6ef5;
+    --accent-glow: rgba(91, 110, 245, 0.25);
+    --success: #34d399;
+    --success-bg: rgba(52, 211, 153, 0.08);
+    --error: #f87171;
+    --error-bg: rgba(248, 113, 113, 0.08);
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91, 110, 245, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91, 110, 245, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 440px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .header .icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px var(--accent-glow);
+  }
+
+  .header .icon svg {
+    width: 28px;
+    height: 28px;
+    color: white;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+
+  /* Form */
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .field input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .field input::placeholder {
+    color: #555568;
+  }
+
+  .field .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0.7;
+  }
+
+  /* Button */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+
+  .btn-primary:hover {
+    background: #4e60e0;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px var(--accent-glow);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Result area */
+  .result {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .result.success {
+    display: block;
+    background: var(--success-bg);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    color: var(--success);
+  }
+
+  .result.error {
+    display: block;
+    background: var(--error-bg);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    color: var(--error);
+  }
+
+  .result-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .result-detail {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    word-break: break-all;
+    opacity: 0.85;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .result-detail dt {
+    color: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 8px;
+  }
+
+  .result-detail dt:first-child {
+    margin-top: 0;
+  }
+
+  .result-detail dd {
+    margin-top: 2px;
+  }
+
+  /* Options toggle */
+  .options-toggle {
+    margin-bottom: 20px;
+  }
+
+  .options-toggle summary {
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .options-toggle summary::-webkit-details-marker { display: none; }
+
+  .options-toggle summary .arrow {
+    transition: transform 0.2s;
+    font-size: 10px;
+  }
+
+  .options-toggle[open] summary .arrow {
+    transform: rotate(90deg);
+  }
+
+  .options-body {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .option-row span {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* Toggle switch */
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+  }
+
+  .toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle .slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .toggle .slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .toggle input:checked + .slider {
+    background: var(--accent);
+  }
+
+  .toggle input:checked + .slider::before {
+    transform: translateX(18px);
+  }
+
+  /* Select */
+  .field select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .field select:focus {
+    border-color: var(--border-focus);
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Spinner */
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
 </head>
 <body>
-    <h1>Passkey Demo</h1>
-    <p>This is a demo showcasing the use of passkeys for authentication.</p>
+
+<div class="container">
+  <div class="header">
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 7a2 2 0 0 1 2 2m4 0a6 6 0 0 1-7.74 5.74L8 20H5v-3l5.26-5.26A6 6 0 1 1 21 9z"/>
+      </svg>
+    </div>
+    <h1>Passkey Registration Demo</h1>
+    <p>パスキーを作成して、iOSパスワードアプリでの<br>表示を検証するためのデモサイト</p>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label for="username">ユーザー名</label>
+      <input type="text" id="username" placeholder="demo@example.com" autocomplete="username webauthn">
+      <div class="hint">→ パスワードアプリに表示される名前</div>
+    </div>
+
+    <div class="field">
+      <label for="displayName">表示名</label>
+      <input type="text" id="displayName" placeholder="Demo User">
+      <div class="hint">→ user.displayName に設定される値</div>
+    </div>
+
+    <details class="options-toggle">
+      <summary><span class="arrow">▶</span> 詳細オプション</summary>
+      <div class="options-body">
+        <div class="field">
+          <label for="rpName">RP Name</label>
+          <input type="text" id="rpName" placeholder="自動（ドキュメントタイトル）">
+          <div class="hint">→ rp.name（空欄でページタイトルを使用）</div>
+        </div>
+        <div class="field">
+          <label for="attestation">Attestation</label>
+          <select id="attestation">
+            <option value="none">none</option>
+            <option value="indirect">indirect</option>
+            <option value="direct">direct</option>
+            <option value="enterprise">enterprise</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="authenticatorAttachment">Authenticator Attachment</label>
+          <select id="authenticatorAttachment">
+            <option value="">指定なし（デフォルト）</option>
+            <option value="platform" selected>platform</option>
+            <option value="cross-platform">cross-platform</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="residentKey">Resident Key</label>
+          <select id="residentKey">
+            <option value="preferred">preferred</option>
+            <option value="required" selected>required</option>
+            <option value="discouraged">discouraged</option>
+          </select>
+        </div>
+        <div class="option-row">
+          <span>User Verification (required)</span>
+          <label class="toggle">
+            <input type="checkbox" id="userVerification" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </details>
+
+    <button class="btn btn-primary" id="registerBtn" onclick="registerPasskey()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 7a2 2 0 0 1 2 2m4 0a6 6 0 0 1-7.74 5.74L8 20H5v-3l5.26-5.26A6 6 0 1 1 21 9z"/>
+      </svg>
+      パスキーを登録
+    </button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <div class="footer">
+    RP ID: <span id="rpIdDisplay"></span> — GitHub Pages Passkey Demo
+  </div>
+</div>
+
+<script>
+  // Display current RP ID (= hostname)
+  document.getElementById('rpIdDisplay').textContent = location.hostname;
+
+  function bufferToBase64url(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let str = '';
+    for (const b of bytes) str += String.fromCharCode(b);
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async function registerPasskey() {
+    const btn = document.getElementById('registerBtn');
+    const resultEl = document.getElementById('result');
+
+    const username = document.getElementById('username').value.trim() || 'demo@example.com';
+    const displayName = document.getElementById('displayName').value.trim() || username;
+    const rpName = document.getElementById('rpName').value.trim() || document.title;
+    const attestation = document.getElementById('attestation').value;
+    const authenticatorAttachment = document.getElementById('authenticatorAttachment').value;
+    const residentKey = document.getElementById('residentKey').value;
+    const userVerification = document.getElementById('userVerification').checked ? 'required' : 'preferred';
+
+    // UI: loading state
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> 登録中...';
+    resultEl.className = 'result';
+    resultEl.style.display = 'none';
+
+    try {
+      // Generate random challenge & user ID (no server needed)
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+
+      const userId = new Uint8Array(16);
+      crypto.getRandomValues(userId);
+
+      const publicKeyOptions = {
+        challenge,
+        rp: {
+          name: rpName,
+          id: location.hostname,
+        },
+        user: {
+          id: userId,
+          name: username,
+          displayName: displayName,
+        },
+        pubKeyCredParams: [
+          { alg: -7, type: 'public-key' },   // ES256
+          { alg: -257, type: 'public-key' },  // RS256
+        ],
+        timeout: 120000,
+        attestation,
+        authenticatorSelection: {
+          residentKey,
+          userVerification,
+        },
+      };
+
+      // Only set authenticatorAttachment if specified
+      if (authenticatorAttachment) {
+        publicKeyOptions.authenticatorSelection.authenticatorAttachment = authenticatorAttachment;
+      }
+
+      console.log('PublicKeyCredentialCreationOptions:', JSON.stringify(publicKeyOptions, (k, v) => {
+        if (v instanceof ArrayBuffer || v instanceof Uint8Array) return bufferToBase64url(v);
+        return v;
+      }, 2));
+
+      const credential = await navigator.credentials.create({ publicKey: publicKeyOptions });
+
+      // Extract response details
+      const response = credential.response;
+      const credentialId = bufferToBase64url(credential.rawId);
+      const attestationObject = bufferToBase64url(response.attestationObject);
+      const clientDataJSON = bufferToBase64url(response.clientDataJSON);
+
+      // Decode clientDataJSON for display
+      const clientData = JSON.parse(new TextDecoder().decode(response.getClientDataJSON()));
+
+      resultEl.className = 'result success';
+      resultEl.innerHTML = `
+        <div class="result-title">✓ パスキー登録成功</div>
+        <div>iOSのパスワードアプリを確認してください。<br>
+        <strong>${location.hostname}</strong> に対するパスキーが保存されています。</div>
+        <dl class="result-detail">
+          <dt>Credential ID</dt>
+          <dd>${credentialId}</dd>
+          <dt>Credential Type</dt>
+          <dd>${credential.type} / ${credential.authenticatorAttachment || 'N/A'}</dd>
+          <dt>Client Data Origin</dt>
+          <dd>${clientData.origin}</dd>
+          <dt>Client Data Type</dt>
+          <dd>${clientData.type}</dd>
+          <dt>Transports</dt>
+          <dd>${response.getTransports?.() || 'N/A'}</dd>
+        </dl>
+      `;
+    } catch (err) {
+      console.error('Registration failed:', err);
+      resultEl.className = 'result error';
+
+      let message = err.message;
+      if (err.name === 'NotAllowedError') {
+        message = 'ユーザーが操作をキャンセルしたか、タイムアウトしました。';
+      } else if (err.name === 'SecurityError') {
+        message = 'セキュリティエラー: HTTPSでアクセスしているか、RP IDが正しいか確認してください。';
+      }
+
+      resultEl.innerHTML = `
+        <div class="result-title">✗ 登録失敗</div>
+        <div>${message}</div>
+        <dl class="result-detail">
+          <dt>Error Name</dt>
+          <dd>${err.name}</dd>
+        </dl>
+      `;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px">
+          <path d="M15 7a2 2 0 0 1 2 2m4 0a6 6 0 0 1-7.74 5.74L8 20H5v-3l5.26-5.26A6 6 0 1 1 21 9z"/>
+        </svg>
+        パスキーを登録
+      `;
+    }
+  }
+</script>
+
 </body>
 </html>
