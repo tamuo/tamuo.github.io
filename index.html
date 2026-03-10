@@ -1,601 +1,365 @@
 
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Passkey Demo</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>パスキー登録 - Passkey Demo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-  :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface-raised: #1a1a26;
-    --border: #2a2a3a;
-    --border-focus: #5b6ef5;
-    --text: #e8e8f0;
-    --text-muted: #8888a0;
-    --accent: #5b6ef5;
-    --accent-glow: rgba(91, 110, 245, 0.25);
-    --success: #34d399;
-    --success-bg: rgba(52, 211, 153, 0.08);
-    --error: #f87171;
-    --error-bg: rgba(248, 113, 113, 0.08);
-    --radius: 12px;
-  }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0f1a;
+      --surface: #111827;
+      --surface-2: #1a2332;
+      --border: #2a3444;
+      --text: #e8edf5;
+      --text-muted: #8899aa;
+      --accent: #f59e0b;
+      --accent-dim: #92400e;
+      --accent-glow: rgba(245, 158, 11, 0.15);
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --red: #ef4444;
+      --radius: 12px;
+      --font: 'IBM Plex Sans', -apple-system, sans-serif;
+      --mono: 'IBM Plex Mono', monospace;
+    }
 
-  body {
-    font-family: 'IBM Plex Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    position: relative;
-    overflow-x: hidden;
-  }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(245, 158, 11, 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(34, 197, 94, 0.04) 0%, transparent 60%);
+    }
 
-  /* Subtle grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(91, 110, 245, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(91, 110, 245, 0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-  }
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
 
-  .container {
-    width: 100%;
-    max-width: 440px;
-  }
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.3rem;
+    }
 
-  /* Header */
-  .header {
-    text-align: center;
-    margin-bottom: 36px;
-  }
+    .header h1 .icon { color: var(--accent); }
 
-  .header .icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, var(--accent), #8b5cf6);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 32px var(--accent-glow);
-  }
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
 
-  .header .icon svg {
-    width: 28px;
-    height: 28px;
-    color: white;
-  }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      width: 100%;
+      max-width: 460px;
+      margin-bottom: 1.2rem;
+    }
 
-  .header h1 {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    margin-bottom: 8px;
-  }
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
 
-  .header p {
-    font-size: 14px;
-    color: var(--text-muted);
-    line-height: 1.5;
-  }
+    .card .subtitle {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-bottom: 1.4rem;
+      line-height: 1.5;
+    }
 
-  /* Card */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px;
-  }
+    .form-group {
+      margin-bottom: 1rem;
+    }
 
-  /* Form */
-  .field {
-    margin-bottom: 20px;
-  }
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
 
-  .field label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    letter-spacing: 0.02em;
-  }
+    .form-group input {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
 
-  .field input {
-    width: 100%;
-    padding: 12px 14px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 15px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
+    .form-group input:focus {
+      border-color: var(--accent);
+    }
 
-  .field input:focus {
-    border-color: var(--border-focus);
-    box-shadow: 0 0 0 3px var(--accent-glow);
-  }
+    .btn {
+      width: 100%;
+      padding: 0.7rem;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, var(--accent-dim), #b45309);
+      color: #fff;
+    }
+    .btn:hover { filter: brightness(1.15); }
 
-  .field input::placeholder {
-    color: #555568;
-  }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: none;
+    }
 
-  .field .hint {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    opacity: 0.7;
-  }
+    .btn .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
 
-  /* Button */
-  .btn {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 8px;
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
+    .btn.loading .spinner { display: inline-block; }
+    .btn.loading .btn-text { display: none; }
 
-  .btn-primary {
-    background: var(--accent);
-    color: white;
-    box-shadow: 0 4px 16px var(--accent-glow);
-  }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-  .btn-primary:hover {
-    background: #4e60e0;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 24px var(--accent-glow);
-  }
+    .result {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      display: none;
+      line-height: 1.6;
+    }
 
-  .btn-primary:active {
-    transform: translateY(0);
-  }
+    .result.show { display: block; }
+    .result.success { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); }
+    .result.error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
 
-  .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
+    .result-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
 
-  .btn svg {
-    width: 18px;
-    height: 18px;
-  }
+    .result dl { margin-top: 0.6rem; }
+    .result dt {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      margin-top: 0.4rem;
+    }
+    .result dd {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      word-break: break-all;
+      padding: 0.2rem 0;
+    }
 
-  /* Result area */
-  .result {
-    margin-top: 20px;
-    padding: 16px;
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.6;
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
+    .info-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-top: 1rem;
+    }
 
-  .result.success {
-    display: block;
-    background: var(--success-bg);
-    border: 1px solid rgba(52, 211, 153, 0.2);
-    color: var(--success);
-  }
+    .info-box strong { color: var(--text); }
 
-  .result.error {
-    display: block;
-    background: var(--error-bg);
-    border: 1px solid rgba(248, 113, 113, 0.2);
-    color: var(--error);
-  }
+    .info-box code {
+      background: var(--bg);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+    }
 
-  .result-title {
-    font-weight: 600;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+    .nav-links {
+      text-align: center;
+      margin-top: 0.5rem;
+    }
 
-  .result-detail {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    word-break: break-all;
-    opacity: 0.85;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-  }
+    .nav-links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.82rem;
+      margin: 0 0.6rem;
+    }
 
-  .result-detail dt {
-    color: var(--text-muted);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 8px;
-  }
-
-  .result-detail dt:first-child {
-    margin-top: 0;
-  }
-
-  .result-detail dd {
-    margin-top: 2px;
-  }
-
-  /* Options toggle */
-  .options-toggle {
-    margin-bottom: 20px;
-  }
-
-  .options-toggle summary {
-    font-size: 13px;
-    color: var(--text-muted);
-    cursor: pointer;
-    user-select: none;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .options-toggle summary::-webkit-details-marker { display: none; }
-
-  .options-toggle summary .arrow {
-    transition: transform 0.2s;
-    font-size: 10px;
-  }
-
-  .options-toggle[open] summary .arrow {
-    transform: rotate(90deg);
-  }
-
-  .options-body {
-    margin-top: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .option-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .option-row span {
-    font-size: 13px;
-    color: var(--text-muted);
-  }
-
-  /* Toggle switch */
-  .toggle {
-    position: relative;
-    width: 40px;
-    height: 22px;
-  }
-
-  .toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .toggle .slider {
-    position: absolute;
-    inset: 0;
-    background: var(--border);
-    border-radius: 11px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .toggle .slider::before {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    left: 3px;
-    bottom: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.2s;
-  }
-
-  .toggle input:checked + .slider {
-    background: var(--accent);
-  }
-
-  .toggle input:checked + .slider::before {
-    transform: translateX(18px);
-  }
-
-  /* Select */
-  .field select {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 14px;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-
-  .field select:focus {
-    border-color: var(--border-focus);
-  }
-
-  /* Footer */
-  .footer {
-    text-align: center;
-    margin-top: 24px;
-    font-size: 12px;
-    color: var(--text-muted);
-    opacity: 0.5;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Spinner */
-  .spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-</style>
+    .nav-links a:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <div class="icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M15 7a2 2 0 0 1 2 2m4 0a6 6 0 0 1-7.74 5.74L8 20H5v-3l5.26-5.26A6 6 0 1 1 21 9z"/>
-      </svg>
-    </div>
-    <h1>Passkey Registration Demo</h1>
-    <p>パスキーを作成して、iOSパスワードアプリでの<br>表示を検証するためのデモサイト</p>
+<div class="header">
+  <h1><span class="icon">📝</span> パスキー登録</h1>
+  <p>WebAuthn Credential を作成してパスキーを登録</p>
+</div>
+
+<div class="card">
+  <h2>パスキーを登録する</h2>
+  <p class="subtitle">
+    <code>navigator.credentials.create()</code> を呼び出してパスキーを作成します。
+    RPサーバーなしのクライアントサイドのみの実装です。
+  </p>
+
+  <div class="form-group">
+    <label for="username">ユーザー名</label>
+    <input type="text" id="username" placeholder="例: demo-user" value="demo-user">
   </div>
 
-  <div class="card">
-    <div class="field">
-      <label for="username">ユーザー名</label>
-      <input type="text" id="username" placeholder="demo@example.com" autocomplete="username webauthn">
-      <div class="hint">→ パスワードアプリに表示される名前</div>
-    </div>
-
-    <div class="field">
-      <label for="displayName">表示名</label>
-      <input type="text" id="displayName" placeholder="Demo User">
-      <div class="hint">→ user.displayName に設定される値</div>
-    </div>
-
-    <details class="options-toggle">
-      <summary><span class="arrow">▶</span> 詳細オプション</summary>
-      <div class="options-body">
-        <div class="field">
-          <label for="rpName">RP Name</label>
-          <input type="text" id="rpName" placeholder="自動（ドキュメントタイトル）">
-          <div class="hint">→ rp.name（空欄でページタイトルを使用）</div>
-        </div>
-        <div class="field">
-          <label for="attestation">Attestation</label>
-          <select id="attestation">
-            <option value="none">none</option>
-            <option value="indirect">indirect</option>
-            <option value="direct">direct</option>
-            <option value="enterprise">enterprise</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="authenticatorAttachment">Authenticator Attachment</label>
-          <select id="authenticatorAttachment">
-            <option value="">指定なし（デフォルト）</option>
-            <option value="platform" selected>platform</option>
-            <option value="cross-platform">cross-platform</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="residentKey">Resident Key</label>
-          <select id="residentKey">
-            <option value="preferred">preferred</option>
-            <option value="required" selected>required</option>
-            <option value="discouraged">discouraged</option>
-          </select>
-        </div>
-        <div class="option-row">
-          <span>User Verification (required)</span>
-          <label class="toggle">
-            <input type="checkbox" id="userVerification" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
-    </details>
-
-    <button class="btn btn-primary" id="registerBtn" onclick="registerPasskey()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M15 7a2 2 0 0 1 2 2m4 0a6 6 0 0 1-7.74 5.74L8 20H5v-3l5.26-5.26A6 6 0 1 1 21 9z"/>
-      </svg>
-      パスキーを登録
-    </button>
-
-    <div class="result" id="result"></div>
+  <div class="form-group">
+    <label for="displayName">表示名</label>
+    <input type="text" id="displayName" placeholder="例: Demo User" value="Demo User">
   </div>
 
-  <div class="footer">
-    RP ID: <span id="rpIdDisplay"></span> — GitHub Pages Passkey Demo
+  <button class="btn" id="btnRegister" onclick="registerPasskey()">
+    <span class="spinner"></span>
+    <span class="btn-text">🛡️ パスキーを登録</span>
+  </button>
+
+  <div class="result" id="result"></div>
+
+  <div class="info-box">
+    <strong>登録のポイント：</strong><br>
+    <code>authenticatorSelection.residentKey = "required"</code> を指定しているため、
+    Discoverable Credential（Resident Key）として登録されます。
+    これにより、ログインページの Conditional UI でパスキー候補として表示されます。<br><br>
+    <strong>RP ID：</strong> <code id="showRpId"></code>
   </div>
 </div>
 
-<script>
-  // Display current RP ID (= hostname)
-  document.getElementById('rpIdDisplay').textContent = location.hostname;
+<div class="nav-links">
+  <a href="login.html">🔐 ログイン</a>
+  <a href="register-password.html">🔑 パスワード登録</a>
+</div>
 
-  function bufferToBase64url(buffer) {
+<script>
+  document.getElementById('showRpId').textContent = location.hostname;
+
+  function bufferToBase64URL(buffer) {
     const bytes = new Uint8Array(buffer);
     let str = '';
-    for (const b of bytes) str += String.fromCharCode(b);
-    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    bytes.forEach(b => str += String.fromCharCode(b));
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  function setLoading(btn, loading) {
+    if (loading) { btn.classList.add('loading'); btn.disabled = true; }
+    else { btn.classList.remove('loading'); btn.disabled = false; }
   }
 
   async function registerPasskey() {
-    const btn = document.getElementById('registerBtn');
-    const resultEl = document.getElementById('result');
-
-    const username = document.getElementById('username').value.trim() || 'demo@example.com';
-    const displayName = document.getElementById('displayName').value.trim() || username;
-    const rpName = document.getElementById('rpName').value.trim() || document.title;
-    const attestation = document.getElementById('attestation').value;
-    const authenticatorAttachment = document.getElementById('authenticatorAttachment').value;
-    const residentKey = document.getElementById('residentKey').value;
-    const userVerification = document.getElementById('userVerification').checked ? 'required' : 'preferred';
-
-    // UI: loading state
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner"></div> 登録中...';
-    resultEl.className = 'result';
-    resultEl.style.display = 'none';
+    const btn = document.getElementById('btnRegister');
+    const result = document.getElementById('result');
+    setLoading(btn, true);
+    result.className = 'result';
 
     try {
-      // Generate random challenge & user ID (no server needed)
-      const challenge = new Uint8Array(32);
-      crypto.getRandomValues(challenge);
+      const username = document.getElementById('username').value || 'demo-user';
+      const displayName = document.getElementById('displayName').value || 'Demo User';
 
       const userId = new Uint8Array(16);
       crypto.getRandomValues(userId);
 
-      const publicKeyOptions = {
-        challenge,
-        rp: {
-          name: rpName,
-          id: location.hostname,
-        },
-        user: {
-          id: userId,
-          name: username,
-          displayName: displayName,
-        },
-        pubKeyCredParams: [
-          { alg: -7, type: 'public-key' },   // ES256
-          { alg: -257, type: 'public-key' },  // RS256
-        ],
-        timeout: 120000,
-        attestation,
-        authenticatorSelection: {
-          residentKey,
-          userVerification,
-        },
-      };
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
 
-      // Only set authenticatorAttachment if specified
-      if (authenticatorAttachment) {
-        publicKeyOptions.authenticatorSelection.authenticatorAttachment = authenticatorAttachment;
-      }
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          rp: {
+            name: "Passkey Demo",
+            id: location.hostname
+          },
+          user: {
+            id: userId,
+            name: username,
+            displayName: displayName
+          },
+          challenge: challenge,
+          pubKeyCredParams: [
+            { alg: -7, type: "public-key" },   // ES256
+            { alg: -257, type: "public-key" }   // RS256
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            residentKey: "required",
+            userVerification: "preferred"
+          },
+          timeout: 60000
+        }
+      });
 
-      console.log('PublicKeyCredentialCreationOptions:', JSON.stringify(publicKeyOptions, (k, v) => {
-        if (v instanceof ArrayBuffer || v instanceof Uint8Array) return bufferToBase64url(v);
-        return v;
-      }, 2));
+      const authData = new Uint8Array(credential.response.getAuthenticatorData());
+      const flags = authData[32];
+      const clientData = JSON.parse(new TextDecoder().decode(credential.response.clientDataJSON));
 
-      const credential = await navigator.credentials.create({ publicKey: publicKeyOptions });
-
-      // Extract response details
-      const response = credential.response;
-      const credentialId = bufferToBase64url(credential.rawId);
-      const attestationObject = bufferToBase64url(response.attestationObject);
-      const clientDataJSON = bufferToBase64url(response.clientDataJSON);
-
-      // Decode clientDataJSON for display
-      const clientData = JSON.parse(new TextDecoder().decode(response.getClientDataJSON()));
-
-      resultEl.className = 'result success';
-      resultEl.innerHTML = `
-        <div class="result-title">✓ パスキー登録成功</div>
-        <div>iOSのパスワードアプリを確認してください。<br>
-        <strong>${location.hostname}</strong> に対するパスキーが保存されています。</div>
-        <dl class="result-detail">
+      result.className = 'result show success';
+      result.innerHTML = `
+        <div class="result-title">✓ パスキー登録成功！</div>
+        <div>iOSのパスワードアプリ、またはブラウザのパスワードマネージャーにパスキーが保存されました。</div>
+        <dl>
           <dt>Credential ID</dt>
-          <dd>${credentialId}</dd>
-          <dt>Credential Type</dt>
-          <dd>${credential.type} / ${credential.authenticatorAttachment || 'N/A'}</dd>
+          <dd>${bufferToBase64URL(credential.rawId)}</dd>
+          <dt>User ID</dt>
+          <dd>${bufferToBase64URL(userId)}</dd>
+          <dt>Authenticator Data Flags</dt>
+          <dd>UP=${!!(flags & 0x01) ? '✓' : '✗'} UV=${!!(flags & 0x04) ? '✓' : '✗'} AT=${!!(flags & 0x40) ? '✓' : '✗'} BE=${!!(flags & 0x08) ? '✓' : '✗'} BS=${!!(flags & 0x10) ? '✓' : '✗'}</dd>
           <dt>Client Data Origin</dt>
           <dd>${clientData.origin}</dd>
           <dt>Client Data Type</dt>
           <dd>${clientData.type}</dd>
-          <dt>Transports</dt>
-          <dd>${response.getTransports?.() || 'N/A'}</dd>
         </dl>
+        <div style="margin-top: 0.8rem;">
+          → <a href="login.html" style="color: #22c55e;">ログインページで認証テスト</a>
+        </div>
       `;
     } catch (err) {
       console.error('Registration failed:', err);
-      resultEl.className = 'result error';
-
-      let message = err.message;
-      if (err.name === 'NotAllowedError') {
-        message = 'ユーザーが操作をキャンセルしたか、タイムアウトしました。';
-      } else if (err.name === 'SecurityError') {
-        message = 'セキュリティエラー: HTTPSでアクセスしているか、RP IDが正しいか確認してください。';
-      }
-
-      resultEl.innerHTML = `
+      result.className = 'result show error';
+      result.innerHTML = `
         <div class="result-title">✗ 登録失敗</div>
-        <div>${message}</div>
-        <dl class="result-detail">
+        <div>${err.message}</div>
+        <dl>
           <dt>Error Name</dt>
           <dd>${err.name}</dd>
         </dl>
       `;
     } finally {
-      btn.disabled = false;
-      btn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px">
-          <path d="M15 7a2 2 0 0 1 2 2m4 0a6 6 0 0 1-7.74 5.74L8 20H5v-3l5.26-5.26A6 6 0 1 1 21 9z"/>
-        </svg>
-        パスキーを登録
-      `;
+      setLoading(btn, false);
     }
   }
 </script>
