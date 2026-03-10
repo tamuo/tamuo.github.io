@@ -2,788 +2,668 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Passkey Login Demo</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
-  :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface-raised: #1a1a26;
-    --border: #2a2a3a;
-    --border-focus: #5b6ef5;
-    --text: #e8e8f0;
-    --text-muted: #8888a0;
-    --accent: #5b6ef5;
-    --accent-glow: rgba(91, 110, 245, 0.25);
-    --success: #34d399;
-    --success-bg: rgba(52, 211, 153, 0.08);
-    --error: #f87171;
-    --error-bg: rgba(248, 113, 113, 0.08);
-    --radius: 12px;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'IBM Plex Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    position: relative;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(91, 110, 245, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(91, 110, 245, 0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-  }
-
-  .container {
-    width: 100%;
-    max-width: 440px;
-  }
-
-  .header {
-    text-align: center;
-    margin-bottom: 36px;
-  }
-
-  .header .icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #34d399, #06b6d4);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 32px rgba(52, 211, 153, 0.25);
-  }
-
-  .header .icon svg {
-    width: 28px;
-    height: 28px;
-    color: white;
-  }
-
-  .header h1 {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    margin-bottom: 8px;
-  }
-
-  .header p {
-    font-size: 14px;
-    color: var(--text-muted);
-    line-height: 1.5;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px;
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--surface-raised);
-    border-radius: 8px;
-    padding: 4px;
-    margin-bottom: 24px;
-  }
-
-  .tab {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-muted);
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .tab.active {
-    background: var(--accent);
-    color: white;
-    box-shadow: 0 2px 8px var(--accent-glow);
-  }
-
-  .tab:not(.active):hover {
-    color: var(--text);
-  }
-
-  .tab-content {
-    display: none;
-  }
-
-  .tab-content.active {
-    display: block;
-    animation: fadeIn 0.25s ease;
-  }
-
-  /* Form */
-  .field {
-    margin-bottom: 20px;
-  }
-
-  .field label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    letter-spacing: 0.02em;
-  }
-
-  .field input {
-    width: 100%;
-    padding: 12px 14px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 15px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  .field input:focus {
-    border-color: var(--border-focus);
-    box-shadow: 0 0 0 3px var(--accent-glow);
-  }
-
-  .field input::placeholder {
-    color: #555568;
-  }
-
-  .field .hint {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    opacity: 0.7;
-  }
-
-  /* Options toggle */
-  .options-toggle {
-    margin-bottom: 20px;
-  }
-
-  .options-toggle summary {
-    font-size: 13px;
-    color: var(--text-muted);
-    cursor: pointer;
-    user-select: none;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .options-toggle summary::-webkit-details-marker { display: none; }
-
-  .options-toggle summary .arrow {
-    transition: transform 0.2s;
-    font-size: 10px;
-  }
-
-  .options-toggle[open] summary .arrow {
-    transform: rotate(90deg);
-  }
-
-  .options-body {
-    margin-top: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .option-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .option-row span {
-    font-size: 13px;
-    color: var(--text-muted);
-  }
-
-  .toggle {
-    position: relative;
-    width: 40px;
-    height: 22px;
-  }
-
-  .toggle input { opacity: 0; width: 0; height: 0; }
-
-  .toggle .slider {
-    position: absolute;
-    inset: 0;
-    background: var(--border);
-    border-radius: 11px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .toggle .slider::before {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    left: 3px;
-    bottom: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.2s;
-  }
-
-  .toggle input:checked + .slider { background: var(--accent); }
-  .toggle input:checked + .slider::before { transform: translateX(18px); }
-
-  .field select {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 14px;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-
-  .field select:focus { border-color: var(--border-focus); }
-
-  /* Buttons */
-  .btn {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 8px;
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .btn-login {
-    background: linear-gradient(135deg, #34d399, #06b6d4);
-    color: white;
-    box-shadow: 0 4px 16px rgba(52, 211, 153, 0.25);
-  }
-
-  .btn-login:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 24px rgba(52, 211, 153, 0.3);
-  }
-
-  .btn-login:active { transform: translateY(0); }
-  .btn-login:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  .btn svg { width: 18px; height: 18px; }
-
-  /* Divider */
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 20px 0;
-    color: var(--text-muted);
-    font-size: 12px;
-  }
-
-  .divider::before,
-  .divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* Link */
-  .nav-link {
-    text-align: center;
-    margin-top: 16px;
-    font-size: 13px;
-    color: var(--text-muted);
-  }
-
-  .nav-link a {
-    color: var(--accent);
-    text-decoration: none;
-  }
-
-  .nav-link a:hover {
-    text-decoration: underline;
-  }
-
-  /* Result */
-  .result {
-    margin-top: 20px;
-    padding: 16px;
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.6;
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .result.success {
-    display: block;
-    background: var(--success-bg);
-    border: 1px solid rgba(52, 211, 153, 0.2);
-    color: var(--success);
-  }
-
-  .result.error {
-    display: block;
-    background: var(--error-bg);
-    border: 1px solid rgba(248, 113, 113, 0.2);
-    color: var(--error);
-  }
-
-  .result-title {
-    font-weight: 600;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .result-detail {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    word-break: break-all;
-    opacity: 0.85;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-  }
-
-  .result-detail dt {
-    color: var(--text-muted);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 8px;
-  }
-
-  .result-detail dt:first-child { margin-top: 0; }
-  .result-detail dd { margin-top: 2px; }
-
-  /* User card after login */
-  .user-card {
-    display: none;
-    text-align: center;
-    padding: 24px 0 8px;
-    animation: fadeIn 0.4s ease;
-  }
-
-  .user-card.show { display: block; }
-
-  .user-avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #34d399, #06b6d4);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 14px;
-    font-size: 28px;
-    color: white;
-    font-weight: 600;
-  }
-
-  .user-card h2 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .user-card .user-id {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  .btn-logout {
-    margin-top: 20px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-size: 13px;
-    padding: 10px;
-  }
-
-  .btn-logout:hover {
-    border-color: var(--error);
-    color: var(--error);
-  }
-
-  .footer {
-    text-align: center;
-    margin-top: 24px;
-    font-size: 12px;
-    color: var(--text-muted);
-    opacity: 0.5;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン - Passkey Demo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0f1a;
+      --surface: #111827;
+      --surface-2: #1a2332;
+      --border: #2a3444;
+      --text: #e8edf5;
+      --text-muted: #8899aa;
+      --accent: #22c55e;
+      --accent-dim: #166534;
+      --accent-glow: rgba(34, 197, 94, 0.15);
+      --blue: #3b82f6;
+      --blue-dim: #1e40af;
+      --blue-glow: rgba(59, 130, 246, 0.15);
+      --orange: #f59e0b;
+      --orange-dim: #92400e;
+      --red: #ef4444;
+      --radius: 12px;
+      --font: 'IBM Plex Sans', -apple-system, sans-serif;
+      --mono: 'IBM Plex Mono', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(34, 197, 94, 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.04) 0%, transparent 60%);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.3rem;
+    }
+
+    .header h1 .icon { color: var(--accent); }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      width: 100%;
+      max-width: 460px;
+      margin-bottom: 1.2rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .card .subtitle {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-bottom: 1.4rem;
+      line-height: 1.5;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.4rem;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.6rem 0.8rem;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--accent-dim);
+      color: #fff;
+    }
+
+    .tab:hover:not(.active) {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+    }
+
+    .form-group .hint {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      font-family: var(--mono);
+    }
+
+    .form-group .hint code {
+      background: var(--surface-2);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.68rem;
+    }
+
+    /* Separator */
+    .separator {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin: 1.2rem 0;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    .separator::before, .separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 0.7rem;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-passkey {
+      background: linear-gradient(135deg, var(--accent-dim), #15803d);
+      color: #fff;
+      margin-bottom: 0.6rem;
+    }
+    .btn-passkey:hover { filter: brightness(1.15); }
+
+    .btn-password {
+      background: linear-gradient(135deg, var(--blue-dim), #1d4ed8);
+      color: #fff;
+    }
+    .btn-password:hover { filter: brightness(1.15); }
+
+    .btn-conditional {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: #fff;
+    }
+    .btn-conditional:hover { filter: brightness(1.15); }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: none;
+    }
+
+    .btn .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
+
+    .btn.loading .spinner { display: inline-block; }
+    .btn.loading .btn-text { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result */
+    .result {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      display: none;
+      line-height: 1.6;
+    }
+
+    .result.show { display: block; }
+    .result.success { background: var(--accent-glow); border: 1px solid var(--accent-dim); }
+    .result.error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .result-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .result dl {
+      margin-top: 0.6rem;
+    }
+
+    .result dt {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      margin-top: 0.4rem;
+    }
+
+    .result dd {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      word-break: break-all;
+      padding: 0.2rem 0;
+    }
+
+    /* Info box */
+    .info-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      color: var(--text);
+    }
+
+    .info-box code {
+      background: var(--bg);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--orange);
+    }
+
+    /* Links */
+    .nav-links {
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    .nav-links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.82rem;
+      margin: 0 0.6rem;
+    }
+
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    /* Logged in state */
+    .logged-in {
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    .logged-in .avatar {
+      width: 64px; height: 64px;
+      background: var(--accent-glow);
+      border: 2px solid var(--accent-dim);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 1rem;
+    }
+
+    .method-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+    }
+
+    .method-badge.passkey {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--accent-dim);
+    }
+
+    .method-badge.password {
+      background: var(--blue-glow);
+      color: var(--blue);
+      border: 1px solid var(--blue-dim);
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <div class="icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-        <polyline points="10 17 15 12 10 7"/>
-        <line x1="15" y1="12" x2="3" y2="12"/>
-      </svg>
-    </div>
-    <h1>Passkey Login Demo</h1>
-    <p>登録済みのパスキーを使ってログインを検証</p>
+<div class="header">
+  <h1><span class="icon">🔐</span> ログイン</h1>
+  <p>パスキーまたはパスワードでログイン</p>
+</div>
+
+<!-- ログインカード -->
+<div class="card" id="loginCard">
+  <h2>認証方式を選択</h2>
+  <p class="subtitle">
+    ユーザー名入力欄にフォーカスすると、ブラウザがパスキーとパスワードの両方を候補表示します（Conditional UI）。
+  </p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="conditional">Conditional UI</button>
+    <button class="tab" data-tab="passkey-only">パスキーのみ</button>
+    <button class="tab" data-tab="password-only">パスワードのみ</button>
   </div>
 
-  <!-- Login Form -->
-  <div class="card" id="loginCard">
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('discoverable')">パスキーでログイン</button>
-      <button class="tab" onclick="switchTab('username')">ユーザー名を指定</button>
-    </div>
-
-    <!-- Tab 1: Discoverable (Passkey modal) -->
-    <div class="tab-content active" id="tab-discoverable">
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.6;">
-        ボタンを押すとiOSのパスキー選択UIが表示されます。<br>
-        登録済みのパスキーを選んでログインできます。
-      </p>
-
-      <details class="options-toggle">
-        <summary><span class="arrow">▶</span> 詳細オプション</summary>
-        <div class="options-body">
-          <div class="option-row">
-            <span>User Verification (required)</span>
-            <label class="toggle">
-              <input type="checkbox" id="uvDiscoverable" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-      </details>
-
-      <button class="btn btn-login" id="discoverableBtn" onclick="loginDiscoverable()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-          <polyline points="10 17 15 12 10 7"/>
-          <line x1="15" y1="12" x2="3" y2="12"/>
-        </svg>
-        パスキーでログイン
-      </button>
-    </div>
-
-    <!-- Tab 2: With username (allowCredentials) -->
-    <div class="tab-content" id="tab-username">
-      <div class="field">
-        <label for="loginCredId">Credential ID</label>
-        <input type="text" id="loginCredId" placeholder="登録時に表示されたCredential IDを貼り付け">
-        <div class="hint">→ allowCredentials に指定（空欄でも動作可）</div>
+  <!-- Tab 1: Conditional UI (パスキー + パスワード両方候補表示) -->
+  <div class="tab-content active" id="tab-conditional">
+    <form id="conditionalForm" autocomplete="on">
+      <div class="form-group">
+        <label for="cond-username">ユーザー名</label>
+        <input
+          type="text"
+          id="cond-username"
+          name="username"
+          autocomplete="username webauthn"
+          placeholder="ユーザー名を入力"
+        >
+        <div class="hint">autocomplete=<code>"username webauthn"</code></div>
       </div>
-
-      <details class="options-toggle">
-        <summary><span class="arrow">▶</span> 詳細オプション</summary>
-        <div class="options-body">
-          <div class="option-row">
-            <span>User Verification (required)</span>
-            <label class="toggle">
-              <input type="checkbox" id="uvUsername" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-      </details>
-
-      <button class="btn btn-login" id="usernameBtn" onclick="loginWithCredId()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-          <polyline points="10 17 15 12 10 7"/>
-          <line x1="15" y1="12" x2="3" y2="12"/>
-        </svg>
-        ログイン
+      <div class="form-group">
+        <label for="cond-password">パスワード</label>
+        <input
+          type="password"
+          id="cond-password"
+          name="password"
+          autocomplete="current-password"
+          placeholder="パスワードを入力"
+        >
+        <div class="hint">autocomplete=<code>"current-password"</code></div>
+      </div>
+      <button type="submit" class="btn btn-conditional" id="btnConditional">
+        <span class="spinner"></span>
+        <span class="btn-text">🔑 ログイン（パスキー or パスワード）</span>
       </button>
-    </div>
+    </form>
 
-    <div class="result" id="result"></div>
-
-    <div class="divider">or</div>
-
-    <div class="nav-link">
-      パスキー未登録の方は <a href="index.html">こちらから登録</a>
+    <div class="info-box" style="margin-top: 1rem;">
+      <strong>Conditional UIの動作：</strong><br>
+      ユーザー名欄にフォーカスすると、ブラウザが<strong>パスキー</strong>と<strong>保存済みパスワード</strong>の両方を候補として表示します。<br>
+      パスキーを選択 → WebAuthn認証<br>
+      パスワードを選択 → フォーム入力によるパスワード認証<br><br>
+      <strong>autocomplete属性のポイント：</strong><br>
+      <code>username webauthn</code> を指定することで、パスキーとパスワード両方のオートフィルが有効になります。
     </div>
   </div>
 
-  <!-- Logged in state -->
-  <div class="card" id="loggedInCard" style="display:none;">
-    <div class="user-card show">
-      <div class="user-avatar" id="userAvatar">?</div>
-      <h2 id="loggedInUser">-</h2>
-      <div class="user-id" id="loggedInCredId">-</div>
+  <!-- Tab 2: パスキーのみ -->
+  <div class="tab-content" id="tab-passkey-only">
+    <button class="btn btn-passkey" id="btnPasskeyOnly" onclick="authenticatePasskeyOnly()">
+      <span class="spinner"></span>
+      <span class="btn-text">🛡️ パスキーでログイン（モーダル）</span>
+    </button>
+
+    <div class="info-box" style="margin-top: 1rem;">
+      <strong>Modal UI：</strong><br>
+      <code>navigator.credentials.get()</code> を直接呼び出して、パスキー選択モーダルを表示します。<br>
+      <code>mediation: "optional"</code> で呼び出すため、ブラウザのパスキー選択UIがモーダルとして表示されます。
     </div>
-    <div class="result success" id="loginDetail" style="display:block;"></div>
-    <button class="btn btn-logout" onclick="logout()">ログアウト</button>
   </div>
 
-  <div class="footer">
-    RP ID: <span id="rpIdDisplay"></span> — GitHub Pages Passkey Demo
+  <!-- Tab 3: パスワードのみ -->
+  <div class="tab-content" id="tab-password-only">
+    <form id="passwordForm" autocomplete="on">
+      <div class="form-group">
+        <label for="pw-username">ユーザー名</label>
+        <input
+          type="text"
+          id="pw-username"
+          name="username"
+          autocomplete="username"
+          placeholder="ユーザー名を入力"
+        >
+        <div class="hint">autocomplete=<code>"username"</code>（webauthnなし）</div>
+      </div>
+      <div class="form-group">
+        <label for="pw-password">パスワード</label>
+        <input
+          type="password"
+          id="pw-password"
+          name="password"
+          autocomplete="current-password"
+          placeholder="パスワードを入力"
+        >
+        <div class="hint">autocomplete=<code>"current-password"</code></div>
+      </div>
+      <button type="submit" class="btn btn-password" id="btnPassword">
+        <span class="spinner"></span>
+        <span class="btn-text">🔒 パスワードでログイン</span>
+      </button>
+    </form>
+
+    <div class="info-box" style="margin-top: 1rem;">
+      <strong>パスワード専用：</strong><br>
+      <code>autocomplete="username"</code>（webauthnなし）を指定すると、パスワードの候補のみが表示されます。<br>
+      事前に<a href="register-password.html" style="color: var(--orange);">パスワード登録ページ</a>でパスワードを保存しておく必要があります。
+    </div>
   </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<!-- ナビゲーション -->
+<div class="nav-links">
+  <a href="index.html">📝 パスキー登録</a>
+  <a href="register-password.html">🔑 パスワード登録</a>
 </div>
 
 <script>
-  document.getElementById('rpIdDisplay').textContent = location.hostname;
+  // ========== Tab switching ==========
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      hideResult();
+    });
+  });
 
-  function bufferToBase64url(buffer) {
+  // ========== Utility ==========
+  function bufferToBase64URL(buffer) {
     const bytes = new Uint8Array(buffer);
     let str = '';
-    for (const b of bytes) str += String.fromCharCode(b);
-    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-
-  function base64urlToBuffer(base64url) {
-    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-    const pad = base64.length % 4;
-    const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
-    const binary = atob(padded);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes.buffer;
-  }
-
-  // Tab switching
-  function switchTab(tab) {
-    document.querySelectorAll('.tab').forEach((t, i) => {
-      t.classList.toggle('active', (tab === 'discoverable' && i === 0) || (tab === 'username' && i === 1));
-    });
-    document.getElementById('tab-discoverable').classList.toggle('active', tab === 'discoverable');
-    document.getElementById('tab-username').classList.toggle('active', tab === 'username');
-    // Clear result on tab switch
-    const r = document.getElementById('result');
-    r.className = 'result';
-    r.style.display = 'none';
-  }
-
-  // Parse authenticatorData to extract flags
-  function parseAuthData(authData) {
-    const bytes = new Uint8Array(authData);
-    const flags = bytes[32];
-    return {
-      rpIdHash: bufferToBase64url(bytes.slice(0, 32)),
-      up: !!(flags & 0x01),
-      uv: !!(flags & 0x04),
-      be: !!(flags & 0x08),
-      bs: !!(flags & 0x10),
-      flagsHex: '0x' + flags.toString(16).padStart(2, '0'),
-      signCount: new DataView(bytes.buffer).getUint32(33),
-    };
+    bytes.forEach(b => str += String.fromCharCode(b));
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 
   function setLoading(btn, loading) {
-    btn.disabled = loading;
     if (loading) {
-      btn.dataset.originalHtml = btn.innerHTML;
-      btn.innerHTML = '<div class="spinner"></div> 認証中...';
+      btn.classList.add('loading');
+      btn.disabled = true;
     } else {
-      btn.innerHTML = btn.dataset.originalHtml;
+      btn.classList.remove('loading');
+      btn.disabled = false;
     }
   }
 
   function showResult(success, html) {
-    const r = document.getElementById('result');
-    r.className = success ? 'result success' : 'result error';
-    r.innerHTML = html;
+    const el = document.getElementById('result');
+    el.className = 'result show ' + (success ? 'success' : 'error');
+    el.innerHTML = html;
   }
 
-  function showLoggedIn(credential, authInfo, clientData) {
-    const credId = bufferToBase64url(credential.rawId);
+  function hideResult() {
+    document.getElementById('result').className = 'result';
+  }
 
-    // Derive display name from userHandle if available
-    let userName = 'Passkey User';
-    if (credential.response.userHandle && credential.response.userHandle.byteLength > 0) {
-      try {
-        const decoded = new TextDecoder().decode(credential.response.userHandle);
-        if (decoded && /^[\x20-\x7E]+$/.test(decoded)) {
-          userName = decoded;
-        }
-      } catch(e) {}
-    }
+  function parseAuthenticatorData(authData) {
+    const flags = authData[32];
+    return {
+      up: !!(flags & 0x01),
+      uv: !!(flags & 0x04),
+      be: !!(flags & 0x08),
+      bs: !!(flags & 0x10),
+      signCount: new DataView(authData.buffer, 33, 4).getUint32(0)
+    };
+  }
 
-    const initial = userName.charAt(0).toUpperCase();
-    document.getElementById('userAvatar').textContent = initial;
-    document.getElementById('loggedInUser').textContent = userName;
-    document.getElementById('loggedInCredId').textContent = credId.slice(0, 24) + '...';
+  function showLoggedIn(credential, authInfo, clientData, method) {
+    const methodClass = method === 'passkey' ? 'passkey' : 'password';
+    const methodLabel = method === 'passkey' ? 'パスキー認証' : 'パスワード認証';
 
-    document.getElementById('loginDetail').innerHTML = `
-      <div class="result-title">✓ 認証成功</div>
-      <dl class="result-detail">
+    showResult(true, `
+      <div class="logged-in">
+        <div class="avatar">✅</div>
+        <span class="method-badge ${methodClass}">${methodLabel}</span>
+        <div class="result-title">ログイン成功！</div>
+      </div>
+      ${method === 'passkey' ? `
+      <dl>
         <dt>Credential ID</dt>
-        <dd>${credId}</dd>
-        <dt>Authenticator Attachment</dt>
-        <dd>${credential.authenticatorAttachment || 'N/A'}</dd>
-        <dt>Auth Data Flags</dt>
-        <dd>${authInfo.flagsHex} (UP=${authInfo.up}, UV=${authInfo.uv}, BE=${authInfo.be}, BS=${authInfo.bs})</dd>
+        <dd>${bufferToBase64URL(credential.rawId)}</dd>
+        <dt>Authenticator Data Flags</dt>
+        <dd>UP=${authInfo.up ? '✓' : '✗'} UV=${authInfo.uv ? '✓' : '✗'} BE=${authInfo.be ? '✓' : '✗'} BS=${authInfo.bs ? '✓' : '✗'}</dd>
         <dt>Sign Count</dt>
         <dd>${authInfo.signCount}</dd>
+        <dt>User Handle</dt>
+        <dd>${credential.response.userHandle ? bufferToBase64URL(credential.response.userHandle) : '(none)'}</dd>
         <dt>Client Data Origin</dt>
         <dd>${clientData.origin}</dd>
         <dt>Client Data Type</dt>
         <dd>${clientData.type}</dd>
-        <dt>UserHandle</dt>
-        <dd>${credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : 'null'}</dd>
       </dl>
-    `;
-
-    document.getElementById('loginCard').style.display = 'none';
-    document.getElementById('loggedInCard').style.display = 'block';
+      ` : `
+      <dl>
+        <dt>ユーザー名</dt>
+        <dd>${credential.username}</dd>
+        <dt>認証方式</dt>
+        <dd>パスワード（ブラウザ保存済み）</dd>
+      </dl>
+      `}
+    `);
   }
 
-  function logout() {
-    document.getElementById('loginCard').style.display = 'block';
-    document.getElementById('loggedInCard').style.display = 'none';
-    const r = document.getElementById('result');
-    r.className = 'result';
-    r.style.display = 'none';
-  }
+  // ========== Conditional UI (Tab 1) ==========
+  // Conditional UIでパスキー候補を自動表示
+  let conditionalAbortController = null;
 
-  // Discoverable credential login (no allowCredentials)
-  async function loginDiscoverable() {
-    const btn = document.getElementById('discoverableBtn');
-    const uv = document.getElementById('uvDiscoverable').checked ? 'required' : 'preferred';
-    setLoading(btn, true);
+  async function startConditionalUI() {
+    if (!window.PublicKeyCredential ||
+        !PublicKeyCredential.isConditionalMediationAvailable) {
+      console.log('Conditional UI not supported');
+      return;
+    }
+
+    const available = await PublicKeyCredential.isConditionalMediationAvailable();
+    if (!available) {
+      console.log('Conditional mediation not available');
+      return;
+    }
 
     try {
+      conditionalAbortController = new AbortController();
+
       const challenge = new Uint8Array(32);
       crypto.getRandomValues(challenge);
 
-      const options = {
-        challenge,
-        rpId: location.hostname,
-        userVerification: uv,
-        timeout: 120000,
-      };
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: challenge,
+          rpId: location.hostname,
+          userVerification: 'preferred',
+          allowCredentials: []
+        },
+        mediation: 'conditional',
+        signal: conditionalAbortController.signal
+      });
 
-      console.log('PublicKeyCredentialRequestOptions:', JSON.stringify(options, (k, v) => {
-        if (v instanceof Uint8Array) return bufferToBase64url(v);
-        return v;
-      }, 2));
-
-      const credential = await navigator.credentials.get({ publicKey: options });
-      const authInfo = parseAuthData(credential.response.authenticatorData);
-      const clientData = JSON.parse(new TextDecoder().decode(credential.response.clientDataJSON));
-
-      showLoggedIn(credential, authInfo, clientData);
-
-    } catch (err) {
-      console.error('Authentication failed:', err);
-      let message = err.message;
-      if (err.name === 'NotAllowedError') {
-        message = 'ユーザーが操作をキャンセルしたか、タイムアウトしました。';
+      if (credential) {
+        const authData = new Uint8Array(credential.response.authenticatorData);
+        const authInfo = parseAuthenticatorData(authData);
+        const clientData = JSON.parse(new TextDecoder().decode(credential.response.clientDataJSON));
+        showLoggedIn(credential, authInfo, clientData, 'passkey');
       }
-      showResult(false, `
-        <div class="result-title">✗ 認証失敗</div>
-        <div>${message}</div>
-        <dl class="result-detail">
-          <dt>Error Name</dt>
-          <dd>${err.name}</dd>
-        </dl>
-      `);
-    } finally {
-      setLoading(btn, false);
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Conditional UI error:', err);
+      }
     }
   }
 
-  // Login with specific credential ID
-  async function loginWithCredId() {
-    const btn = document.getElementById('usernameBtn');
-    const credIdInput = document.getElementById('loginCredId').value.trim();
-    const uv = document.getElementById('uvUsername').checked ? 'required' : 'preferred';
+  // Conditional UIフォーム送信 → パスワードログイン
+  document.getElementById('conditionalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnConditional');
+    const username = document.getElementById('cond-username').value;
+    const password = document.getElementById('cond-password').value;
+
+    if (!username || !password) {
+      showResult(false, '<div class="result-title">✗ エラー</div><div>ユーザー名とパスワードを入力してください</div>');
+      return;
+    }
+
     setLoading(btn, true);
+    // デモなのでパスワード検証はシミュレーション
+    await new Promise(r => setTimeout(r, 500));
+
+    showLoggedIn({ username }, null, null, 'password');
+    setLoading(btn, false);
+  });
+
+  // ========== Passkey Only (Tab 2) ==========
+  async function authenticatePasskeyOnly() {
+    const btn = document.getElementById('btnPasskeyOnly');
+    setLoading(btn, true);
+    hideResult();
 
     try {
+      // Conditional UIが動作中なら停止
+      if (conditionalAbortController) {
+        conditionalAbortController.abort();
+        conditionalAbortController = null;
+      }
+
       const challenge = new Uint8Array(32);
       crypto.getRandomValues(challenge);
 
-      const options = {
-        challenge,
-        rpId: location.hostname,
-        userVerification: uv,
-        timeout: 120000,
-      };
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: challenge,
+          rpId: location.hostname,
+          userVerification: 'preferred',
+          allowCredentials: []
+        },
+        mediation: 'optional'
+      });
 
-      // If credential ID is provided, set allowCredentials
-      if (credIdInput) {
-        options.allowCredentials = [{
-          id: base64urlToBuffer(credIdInput),
-          type: 'public-key',
-          transports: ['internal', 'hybrid'],
-        }];
-      }
-
-      console.log('PublicKeyCredentialRequestOptions:', JSON.stringify(options, (k, v) => {
-        if (v instanceof ArrayBuffer || v instanceof Uint8Array) return bufferToBase64url(v);
-        return v;
-      }, 2));
-
-      const credential = await navigator.credentials.get({ publicKey: options });
-      const authInfo = parseAuthData(credential.response.authenticatorData);
+      const authData = new Uint8Array(credential.response.authenticatorData);
+      const authInfo = parseAuthenticatorData(authData);
       const clientData = JSON.parse(new TextDecoder().decode(credential.response.clientDataJSON));
-
-      showLoggedIn(credential, authInfo, clientData);
+      showLoggedIn(credential, authInfo, clientData, 'passkey');
 
     } catch (err) {
       console.error('Authentication failed:', err);
@@ -794,7 +674,7 @@
       showResult(false, `
         <div class="result-title">✗ 認証失敗</div>
         <div>${message}</div>
-        <dl class="result-detail">
+        <dl>
           <dt>Error Name</dt>
           <dd>${err.name}</dd>
         </dl>
@@ -803,6 +683,30 @@
       setLoading(btn, false);
     }
   }
+
+  // ========== Password Only (Tab 3) ==========
+  document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnPassword');
+    const username = document.getElementById('pw-username').value;
+    const password = document.getElementById('pw-password').value;
+
+    if (!username || !password) {
+      showResult(false, '<div class="result-title">✗ エラー</div><div>ユーザー名とパスワードを入力してください</div>');
+      return;
+    }
+
+    setLoading(btn, true);
+    await new Promise(r => setTimeout(r, 500));
+
+    showLoggedIn({ username }, null, null, 'password');
+    setLoading(btn, false);
+  });
+
+  // ========== ページ読み込み時にConditional UIを開始 ==========
+  document.addEventListener('DOMContentLoaded', () => {
+    startConditionalUI();
+  });
 </script>
 
 </body>
