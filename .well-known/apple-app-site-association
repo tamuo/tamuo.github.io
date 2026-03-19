@@ -8,7 +8,10 @@
         ],
         "components": [
           {
-            "/": "/*"
+            "/": "/contents/al/NBK/index.html"
+          },
+          {
+            "/": "/contents/transactionauth/polling"
           }
         ]
       }
